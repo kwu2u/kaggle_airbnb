@@ -1,11 +1,11 @@
-# This script is based on Sandro's python script
-
 import numpy as np
 import pandas as pd
+import math
 from sklearn.preprocessing import LabelEncoder
 import sys
 sys.path.append('C:\\users\\kwu\\anaconda2\\lib\\site-packages\\xgboost-0.4-py2.7.egg')
-from xgboost.sklearn import XGBClassifier
+import xgboost as xgb
+from sklearn.grid_search import GridSearchCV
 
 np.random.seed(0)
 
@@ -16,7 +16,7 @@ sessions = pd.read_csv('../input/sessions.csv')
 labels = df_train['country_destination'].values
 df_train = df_train.drop(['country_destination'], axis=1)
 id_test = df_test['id']
-train_test_cutoff = df_train.shape[0]
+piv_train = df_train.shape[0]
 
 #Creating a DataFrame with train+test data
 df_all = pd.concat((df_train, df_test), axis=0, ignore_index=True)
@@ -67,25 +67,70 @@ for f in ohe_feats:
 
 #Splitting train and test
 vals = df_all.values
-X = vals[:train_test_cutoff]
+X = vals[:piv_train]
 le = LabelEncoder()
 y = le.fit_transform(labels)   
-X_test = vals[train_test_cutoff:]
+X_test = vals[piv_train:]
 
-#Classifier
-xgb = XGBClassifier(max_depth=6, learning_rate=0.2, n_estimators=45,
-                    objective='multi:softprob', subsample=0.5, colsample_bytree=0.5, seed=0)                  
-xgb.fit(X, y)
-y_pred = xgb.predict_proba(X_test)  
+#Grid search hyperparameter tuning
+class XGBoostClassifier():
+    def __init__(self, num_boost_round=10, **params):
+        self.clf = None
+        self.num_boost_round = num_boost_round
+        self.params = params
+        self.params.update({'objective': 'multi:softprob'})
+ 
+    def fit(self, X, y, num_boost_round=None):
+        num_boost_round = num_boost_round or self.num_boost_round
+        self.label2num = {label: i for i, label in enumerate(sorted(set(y)))}
+        dtrain = xgb.DMatrix(X, label=[self.label2num[label] for label in y])
+        self.clf = xgb.train(params=self.params, dtrain=dtrain, num_boost_round=num_boost_round)
+ 
+    def predict(self, X):
+        num2label = {i: label for label, i in self.label2num.items()}
+        Y = self.predict_proba(X)
+        y = np.argmax(Y, axis=1)
+        return np.array([num2label[i] for i in y])
+ 
+    def predict_proba(self, X):
+        dtest = xgb.DMatrix(X)
+        return self.clf.predict(dtest)
+ 
+    def score(self, X, y):
+        Y = self.predict_proba(X)
+        return 1 / logloss(y, Y)
+ 
+    def get_params(self, deep=True):
+        return self.params
+ 
+    def set_params(self, **params):
+        if 'num_boost_round' in params:
+            self.num_boost_round = params.pop('num_boost_round')
+        if 'objective' in params:
+            del params['objective']
+        self.params.update(params)
+        return self
+    
+    
+def logloss(y_true, Y_pred):
+    label2num = dict((name, i) for i, name in enumerate(sorted(set(y_true))))
+    return -1 * sum(math.log(y[label2num[label]]) if y[label2num[label]] > 0 else -np.inf for y, label in zip(Y_pred, y_true)) / len(Y_pred)
 
-#Taking the 5 classes with highest probabilities
-ids = []  #list of ids
-cts = []  #list of countries
-for i in range(len(id_test)):
-    idx = id_test[i]
-    ids += [idx] * 5
-    cts += le.inverse_transform(np.argsort(y_pred[i])[::-1])[:5].tolist()
 
-#Generate submission
-sub = pd.DataFrame(np.column_stack((ids, cts)), columns=['id', 'country'])
-sub.to_csv('sub.csv',index=False)
+clf = XGBoostClassifier(
+    eval_metric = 'ndcg',
+    num_class = 12,
+    silent = 1,
+    )
+parameters = {
+    'num_boost_round': [25, 50, 75],
+    'eta': [0.05, 0.1, 0.3],
+    'max_depth': [6, 9, 12],
+    'subsample': [0.5, 0.9],
+    'colsample_bytree': [0.5, 0.9],
+}
+grid = GridSearchCV(clf, parameters, cv=10)               
+
+grid.fit(X, y)
+print grid.best_score_
+print grid.best_params_
