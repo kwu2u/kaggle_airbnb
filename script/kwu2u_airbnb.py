@@ -7,8 +7,6 @@ import sys
 sys.path.append('C:\\users\\kwu\\anaconda2\\lib\\site-packages\\xgboost-0.4-py2.7.egg')
 from xgboost.sklearn import XGBClassifier
 
-np.random.seed(0)
-
 #Loading data
 df_train = pd.read_csv('../input/train_users_2.csv')
 df_test = pd.read_csv('../input/test_users.csv')
@@ -24,12 +22,14 @@ df_all = pd.concat((df_train, df_test), axis=0, ignore_index=True)
 #aggregating sessions data (based on Abeer Jha post) and adding to df_all
 id_all = df_all['id']
 sessions_rel = sessions[sessions.user_id.isin(id_all)]
-grpby = sessions_rel.groupby(['user_id'])['secs_elapsed'].sum().reset_index()
-grpby.columns = ['user_id','secs_elapsed'] #total time elapsed
+grp_by_sec_elapsed = sessions_rel.groupby(['user_id'])['secs_elapsed'].sum().reset_index()
+grp_by_sec_elapsed.columns = ['user_id','secs_elapsed'] #total time elapsed
+action = pd.pivot_table(sessions_rel, index = ['user_id'],columns = ['action'],values = 'action_detail',aggfunc=len,fill_value=0).reset_index()
 action_type = pd.pivot_table(sessions_rel, index = ['user_id'],columns = ['action_type'],values = 'action',aggfunc=len,fill_value=0).reset_index()
 device_type = pd.pivot_table(sessions_rel, index = ['user_id'],columns = ['device_type'],values = 'action',aggfunc=len,fill_value=0).reset_index()
 sessions_data = pd.merge(action_type,device_type,on='user_id',how='inner')
-sessions_data = pd.merge(sessions_data,grpby,on='user_id',how='inner')
+sessions_data = pd.merge(sessions_data,action,on='user_id',how='inner')
+sessions_data = pd.merge(sessions_data,grp_by_sec_elapsed,on='user_id',how='inner')
 df_all = pd.merge(df_all,sessions_data,left_on='id',right_on='user_id',how='left')
 
 #Removing id and date_first_booking
