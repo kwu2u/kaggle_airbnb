@@ -65,6 +65,11 @@ for f in ohe_feats:
     df_all = df_all.drop([f], axis=1)
     df_all = pd.concat((df_all, df_all_dummy), axis=1)
 
+#using feature selection done during CV
+feat_keep = pd.read_csv('features.csv')
+df_all = df_all[feat_keep.feature.values]
+
+
 #Splitting train and test
 vals = df_all.values
 X = vals[:train_test_cutoff]
