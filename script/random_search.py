@@ -49,6 +49,11 @@ dac = np.vstack(df_all.date_account_created.astype(str).apply(lambda x: list(map
 df_all['dac_year'] = dac[:,0]
 df_all['dac_month'] = dac[:,1]
 df_all['dac_day'] = dac[:,2]
+df_all['date_account_created'] = pd.to_datetime(df_all['date_account_created'])
+#dac_day_of_wk = []
+#for date in df_all.date_account_created:
+#    dac_day_of_wk.append(date.weekday())
+#df_all['dac_day_of_wk'] = pd.Series(dac_day_of_wk)
 df_all = df_all.drop(['date_account_created'], axis=1)
 
 #timestamp_first_active
@@ -56,7 +61,12 @@ tfa = np.vstack(df_all.timestamp_first_active.astype(str).apply(lambda x: list(m
 df_all['tfa_year'] = tfa[:,0]
 df_all['tfa_month'] = tfa[:,1]
 df_all['tfa_day'] = tfa[:,2]
-df_all = df_all.drop(['timestamp_first_active'], axis=1)
+df_all['date_first_active'] = pd.to_datetime((df_all.timestamp_first_active // 1000000), format='%Y%m%d')
+#tfa_day_of_wk = []
+#for date in df_all.date_first_active:
+#    tfa_day_of_wk.append(date.weekday())
+#df_all['tfa_day_of_wk'] = pd.Series(tfa_day_of_wk)
+df_all = df_all.drop(['timestamp_first_active','date_first_active'], axis=1)
 
 #Age 
 #valid range (14-100), calculate birth date (1919-1995), else -1
@@ -70,6 +80,10 @@ for f in ohe_feats:
     df_all_dummy = pd.get_dummies(df_all[f], prefix=f)
     df_all = df_all.drop([f], axis=1)
     df_all = pd.concat((df_all, df_all_dummy), axis=1)
+    
+#using feature selection done during CV
+feat_keep = pd.read_csv('features.csv')
+df_all = df_all[feat_keep.feature.values]
 
 #Splitting train and test
 vals = df_all.values
@@ -129,9 +143,9 @@ clf = XGBoostClassifier(
     silent = 1,
     )
 parameters = {
-    'num_boost_round': [25, 30, 35, 40, 45, 50],
+    'num_boost_round': [30, 35, 40, 45, 50],
     'eta': [0.05, 0.10, 0.15, 0.2, 0.25, 0.3],
-    'max_depth': [6, 7, 8, 9, 10, 11, 12],
+    'max_depth': [4, 5, 6, 7, 8, 9, 10],
     'subsample': [0.5],
     'colsample_bytree': [0.5],
 }
@@ -148,7 +162,7 @@ opt_params = {'eta': 0.15, 'max_depth': 6,'subsample': 0.5, 'colsample_bytree': 
 label2num = {label: i for i, label in enumerate(sorted(set(y)))}
 dtrain = xgb.DMatrix(X, label=[label2num[label] for label in y])
 bst = xgb.train(params=opt_params, dtrain=dtrain, num_boost_round=45)
-xgb.plot_importance(bst)
+#xgb.plot_importance(bst)
 
 def create_feature_map(features):
     outfile = open('xgb.fmap', 'w')
@@ -168,34 +182,34 @@ importance_df.to_csv('features.csv',index=False)
 #df_all_trim_feat = df_all[test.feature.values]
 
 '''
-mean: 0.93932, std: 0.09906, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.25, 'colsample_bytree': 0.5, 'max_depth': 6}
-mean: 0.94178, std: 0.10318, params: {'subsample': 0.5, 'num_boost_round': 50, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 6}
-mean: 0.93384, std: 0.09553, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.15, 'colsample_bytree': 0.5, 'max_depth': 11}
-mean: 0.92916, std: 0.09324, params: {'subsample': 0.5, 'num_boost_round': 25, 'eta': 0.25, 'colsample_bytree': 0.5, 'max_depth': 10}
-mean: 0.89720, std: 0.08399, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 10}
-mean: 0.89385, std: 0.08079, params: {'subsample': 0.5, 'num_boost_round': 50, 'eta': 0.3, 'colsample_bytree': 0.5, 'max_depth': 12}
-mean: 0.92253, std: 0.09070, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.25, 'colsample_bytree': 0.5, 'max_depth': 10}
-mean: 0.93159, std: 0.09586, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.15, 'colsample_bytree': 0.5, 'max_depth': 9}
-mean: 0.83069, std: 0.06626, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.05, 'colsample_bytree': 0.5, 'max_depth': 7}
-mean: 0.93847, std: 0.10063, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.3, 'colsample_bytree': 0.5, 'max_depth': 6}
-mean: 0.83067, std: 0.06632, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.05, 'colsample_bytree': 0.5, 'max_depth': 9}
-mean: 0.91233, std: 0.08447, params: {'subsample': 0.5, 'num_boost_round': 35, 'eta': 0.3, 'colsample_bytree': 0.5, 'max_depth': 11}
-mean: 0.72828, std: 0.04037, params: {'subsample': 0.5, 'num_boost_round': 25, 'eta': 0.05, 'colsample_bytree': 0.5, 'max_depth': 12}
-mean: 0.94523, std: 0.10367, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.15, 'colsample_bytree': 0.5, 'max_depth': 6}
-mean: 0.93210, std: 0.09735, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 10}
-mean: 0.93862, std: 0.09653, params: {'subsample': 0.5, 'num_boost_round': 25, 'eta': 0.3, 'colsample_bytree': 0.5, 'max_depth': 7}
-## mean: 0.94693, std: 0.10458, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.15, 'colsample_bytree': 0.5, 'max_depth': 6}
-mean: 0.93920, std: 0.09947, params: {'subsample': 0.5, 'num_boost_round': 35, 'eta': 0.2, 'colsample_bytree': 0.5, 'max_depth': 8}
-mean: 0.93490, std: 0.09907, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 8}
-mean: 0.92864, std: 0.09258, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.25, 'colsample_bytree': 0.5, 'max_depth': 10}
-mean: 0.92117, std: 0.08788, params: {'subsample': 0.5, 'num_boost_round': 35, 'eta': 0.3, 'colsample_bytree': 0.5, 'max_depth': 9}
-mean: 0.82679, std: 0.06248, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.05, 'colsample_bytree': 0.5, 'max_depth': 12}
-mean: 0.94130, std: 0.10202, params: {'subsample': 0.5, 'num_boost_round': 25, 'eta': 0.25, 'colsample_bytree': 0.5, 'max_depth': 7}
-mean: 0.92248, std: 0.09218, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 12}
-mean: 0.92441, std: 0.09163, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.2, 'colsample_bytree': 0.5, 'max_depth': 12}
-mean: 0.76952, std: 0.05042, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.05, 'colsample_bytree': 0.5, 'max_depth': 10}
-mean: 0.93566, std: 0.09776, params: {'subsample': 0.5, 'num_boost_round': 50, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 11}
-mean: 0.86992, std: 0.07476, params: {'subsample': 0.5, 'num_boost_round': 25, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 11}
-mean: 0.93406, std: 0.09635, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.2, 'colsample_bytree': 0.5, 'max_depth': 9}
-mean: 0.92700, std: 0.09141, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.15, 'colsample_bytree': 0.5, 'max_depth': 11}
+mean: 0.92140, std: 0.08563, params: {'subsample': 0.5, 'num_boost_round': 50, 'eta': 0.25, 'colsample_bytree': 0.5, 'max_depth': 10}
+mean: 0.94061, std: 0.09565, params: {'subsample': 0.5, 'num_boost_round': 35, 'eta': 0.2, 'colsample_bytree': 0.5, 'max_depth': 9}
+mean: 0.92457, std: 0.09266, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 4}
+mean: 0.94458, std: 0.10330, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.15, 'colsample_bytree': 0.5, 'max_depth': 4}
+mean: 0.93143, std: 0.08779, params: {'subsample': 0.5, 'num_boost_round': 35, 'eta': 0.3, 'colsample_bytree': 0.5, 'max_depth': 8}
+mean: 0.92635, std: 0.08520, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.3, 'colsample_bytree': 0.5, 'max_depth': 10}
+##mean: 0.94890, std: 0.10711, params: {'subsample': 0.5, 'num_boost_round': 50, 'eta': 0.15, 'colsample_bytree': 0.5, 'max_depth': 5}
+mean: 0.93055, std: 0.09565, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 8}
+mean: 0.93907, std: 0.09422, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.3, 'colsample_bytree': 0.5, 'max_depth': 7}
+mean: 0.91699, std: 0.08947, params: {'subsample': 0.5, 'num_boost_round': 35, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 10}
+mean: 0.94733, std: 0.10623, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.3, 'colsample_bytree': 0.5, 'max_depth': 4}
+mean: 0.76875, std: 0.04940, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.05, 'colsample_bytree': 0.5, 'max_depth': 5}
+mean: 0.94377, std: 0.09758, params: {'subsample': 0.5, 'num_boost_round': 35, 'eta': 0.25, 'colsample_bytree': 0.5, 'max_depth': 7}
+mean: 0.94733, std: 0.10566, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.25, 'colsample_bytree': 0.5, 'max_depth': 5}
+mean: 0.94759, std: 0.10281, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.2, 'colsample_bytree': 0.5, 'max_depth': 6}
+mean: 0.94213, std: 0.09952, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.15, 'colsample_bytree': 0.5, 'max_depth': 9}
+mean: 0.76410, std: 0.04528, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.05, 'colsample_bytree': 0.5, 'max_depth': 4}
+mean: 0.94822, std: 0.10597, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.15, 'colsample_bytree': 0.5, 'max_depth': 5}
+mean: 0.90999, std: 0.08038, params: {'subsample': 0.5, 'num_boost_round': 50, 'eta': 0.3, 'colsample_bytree': 0.5, 'max_depth': 10}
+mean: 0.83021, std: 0.06541, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.05, 'colsample_bytree': 0.5, 'max_depth': 6}
+mean: 0.90132, std: 0.08544, params: {'subsample': 0.5, 'num_boost_round': 30, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 9}
+mean: 0.93578, std: 0.09347, params: {'subsample': 0.5, 'num_boost_round': 50, 'eta': 0.2, 'colsample_bytree': 0.5, 'max_depth': 9}
+mean: 0.94205, std: 0.09793, params: {'subsample': 0.5, 'num_boost_round': 50, 'eta': 0.2, 'colsample_bytree': 0.5, 'max_depth': 7}
+mean: 0.93866, std: 0.09975, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.1, 'colsample_bytree': 0.5, 'max_depth': 6}
+mean: 0.92921, std: 0.08770, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.3, 'colsample_bytree': 0.5, 'max_depth': 7}
+mean: 0.94718, std: 0.10671, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.2, 'colsample_bytree': 0.5, 'max_depth': 4}
+mean: 0.94487, std: 0.10062, params: {'subsample': 0.5, 'num_boost_round': 40, 'eta': 0.2, 'colsample_bytree': 0.5, 'max_depth': 7}
+mean: 0.94084, std: 0.09724, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.15, 'colsample_bytree': 0.5, 'max_depth': 10}
+mean: 0.94666, std: 0.10674, params: {'subsample': 0.5, 'num_boost_round': 35, 'eta': 0.25, 'colsample_bytree': 0.5, 'max_depth': 4}
+mean: 0.85418, std: 0.07246, params: {'subsample': 0.5, 'num_boost_round': 45, 'eta': 0.05, 'colsample_bytree': 0.5, 'max_depth': 7}
 '''
