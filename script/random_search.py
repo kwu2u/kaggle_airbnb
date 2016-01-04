@@ -119,6 +119,8 @@ class XGBoostClassifier():
     def score(self, X, y):
         Y = self.predict_proba(X)
         return 1 / logloss(y, Y)
+        #r = np.asfarray(Y)[:5]
+        #return np.sum(r / np.log2(np.arange(2, r.size + 2)))
  
     def get_params(self, deep=True):
         return self.params
@@ -131,7 +133,7 @@ class XGBoostClassifier():
         self.params.update(params)
         return self
     
-    
+  
 def logloss(y_true, Y_pred):
     label2num = dict((name, i) for i, name in enumerate(sorted(set(y_true))))
     return -1 * sum(math.log(y[label2num[label]]) if y[label2num[label]] > 0 else -np.inf for y, label in zip(Y_pred, y_true)) / len(Y_pred)
@@ -142,6 +144,7 @@ clf = XGBoostClassifier(
     num_class = 12,
     silent = 1,
     )
+    
 parameters = {
     'num_boost_round': [30, 35, 40, 45, 50],
     'eta': [0.05, 0.10, 0.15, 0.2, 0.25, 0.3],
@@ -156,30 +159,13 @@ print rand.grid_scores_
 print rand.best_score_
 print rand.best_params_
 
-
-#using optimized model to do feature selection
-opt_params = {'eta': 0.15, 'max_depth': 6,'subsample': 0.5, 'colsample_bytree': 0.5}
+###################################################
+param = {'eta': 0.15, 'max_depth': 6,'subsample': 0.5, 'colsample_bytree': 0.5, 'objective': 'multi:softprob', 'num_class': 12}
+num_round = 45
 label2num = {label: i for i, label in enumerate(sorted(set(y)))}
 dtrain = xgb.DMatrix(X, label=[label2num[label] for label in y])
-bst = xgb.train(params=opt_params, dtrain=dtrain, num_boost_round=45)
-#xgb.plot_importance(bst)
+xgb.cv(param, dtrain, num_round, nfold=3, metrics={'ndcg'}, seed = 0)
 
-def create_feature_map(features):
-    outfile = open('xgb.fmap', 'w')
-    i = 0
-    for feat in features:
-        outfile.write('{0}\t{1}\tq\n'.format(i, feat))
-        i = i + 1
-
-    outfile.close()
-
-create_feature_map(list(df_all.columns.values))
-importance = bst.get_fscore(fmap='xgb.fmap')
-importance_df = pd.DataFrame(importance.items(), columns=['feature','fscore'])
-importance_df.to_csv('features.csv',index=False)
-
-#test=pd.read_csv('features.csv')
-#df_all_trim_feat = df_all[test.feature.values]
 
 '''
 mean: 0.92140, std: 0.08563, params: {'subsample': 0.5, 'num_boost_round': 50, 'eta': 0.25, 'colsample_bytree': 0.5, 'max_depth': 10}
