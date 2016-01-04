@@ -44,11 +44,22 @@ df_all = df_all.drop(['id', 'user_id', 'date_first_booking'], axis=1)
 df_all = df_all.fillna(-1)
 
 #####Feature engineering#######
+#holidays_tuples = holidays.US(years=[2010,2011,2012,2013,2014])
+#popular_holidays = ['Thanksgiving', 'Christmas Day', 'Independence Day', 'Labor Day', 'Memorial Day']
+#holidays_tuples = {k:v for (k,v) in holidays_tuples.items() if v in popular_holidays}
+#us_holidays = [i[0] for i in np.array(holidays_tuples.items())]
+#us_holidays = pd.to_datetime(us_holidays)
+#us_holidays30 = us_holidays + pd.DateOffset(-30)
+#us_holidays_window = [pd.date_range(j,i) for i,j in zip(us_holidays,us_holidays30)]
+#us_holidays_window = us_holidays.append(us_holidays_window)
+#us_holidays_window = us_holidays_window.unique()
 #date_account_created
 dac = np.vstack(df_all.date_account_created.astype(str).apply(lambda x: list(map(int, x.split('-')))).values)
 df_all['dac_year'] = dac[:,0]
 df_all['dac_month'] = dac[:,1]
 df_all['dac_day'] = dac[:,2]
+#df_all['date_account_created'] = pd.to_datetime(df_all['date_account_created'])
+#df_all['dac_holiday'] = df_all.date_account_created.isin(us_holidays_window)
 df_all['date_account_created'] = pd.to_datetime(df_all['date_account_created'])
 #dac_day_of_wk = []
 #for date in df_all.date_account_created:
@@ -61,6 +72,8 @@ tfa = np.vstack(df_all.timestamp_first_active.astype(str).apply(lambda x: list(m
 df_all['tfa_year'] = tfa[:,0]
 df_all['tfa_month'] = tfa[:,1]
 df_all['tfa_day'] = tfa[:,2]
+#df_all['timestamp_first_active'] = pd.to_datetime(df_all['timestamp_first_active'])
+#df_all['tfa_holiday'] = df_all.timestamp_first_active.isin(us_holidays_window)
 df_all['date_first_active'] = pd.to_datetime((df_all.timestamp_first_active // 1000000), format='%Y%m%d')
 #tfa_day_of_wk = []
 #for date in df_all.date_first_active:
