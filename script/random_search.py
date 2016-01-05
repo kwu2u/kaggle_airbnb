@@ -8,9 +8,7 @@ import numpy as np
 import pandas as pd
 import math
 from sklearn.preprocessing import LabelEncoder
-import sys
 import holidays
-sys.path.append('C:\\users\\kwu\\anaconda2\\lib\\site-packages\\xgboost-0.4-py2.7.egg')
 import xgboost as xgb
 from sklearn.grid_search import RandomizedSearchCV 
 
@@ -132,8 +130,6 @@ class XGBoostClassifier():
     def score(self, X, y):
         Y = self.predict_proba(X)
         return 1 / logloss(y, Y)
-        #r = np.asfarray(Y)[:5]
-        #return np.sum(r / np.log2(np.arange(2, r.size + 2)))
  
     def get_params(self, deep=True):
         return self.params
@@ -144,13 +140,23 @@ class XGBoostClassifier():
         if 'objective' in params:
             del params['objective']
         self.params.update(params)
-        return self
+        return self  
     
-  
 def logloss(y_true, Y_pred):
     label2num = dict((name, i) for i, name in enumerate(sorted(set(y_true))))
     return -1 * sum(math.log(y[label2num[label]]) if y[label2num[label]] > 0 else -np.inf for y, label in zip(Y_pred, y_true)) / len(Y_pred)
 
+def dcg_at_k(r, k):
+    r = np.asfarray(r)[:k]
+    if r.size:
+        return np.sum(r / np.log2(np.arange(2, r.size + 2)))
+    return 0.
+
+def ndcg_at_k(r, k=5):
+    dcg_max = dcg_at_k(sorted(r, reverse=True), k)
+    if not dcg_max:
+        return 0.
+    return dcg_at_k(r, k) / dcg_max
 
 clf = XGBoostClassifier(
     eval_metric = 'ndcg',
