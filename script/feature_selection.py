@@ -121,6 +121,7 @@ importance = bst.get_fscore(fmap='xgb.fmap')
 importance_df = pd.DataFrame(importance.items(), columns=['feature','fscore'])
 importance_df.to_csv('features.csv',index=False)
 
+'''
 y_pred = bst.predict(xgb.DMatrix(X_test)).reshape(df_test.shape[0],12)
 
 #Taking the 5 classes with highest probabilities
@@ -134,3 +135,4 @@ for i in range(len(id_test)):
 #Generate submission
 sub = pd.DataFrame(np.column_stack((ids, cts)), columns=['id', 'country'])
 sub.to_csv('sub.csv',index=False)
+'''
