@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 import sys
-import holidays
 sys.path.append('C:\\users\\kwu\\anaconda2\\lib\\site-packages\\xgboost-0.4-py2.7.egg')
 from xgboost.sklearn import XGBClassifier
 

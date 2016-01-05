@@ -9,6 +9,7 @@ import pandas as pd
 import math
 from sklearn.preprocessing import LabelEncoder
 import sys
+import holidays
 sys.path.append('C:\\users\\kwu\\anaconda2\\lib\\site-packages\\xgboost-0.4-py2.7.egg')
 import xgboost as xgb
 from sklearn.grid_search import RandomizedSearchCV 
@@ -160,8 +161,8 @@ clf = XGBoostClassifier(
     
 parameters = {
     'num_boost_round': [30, 35, 40, 45, 50],
-    'eta': [0.05, 0.10, 0.15, 0.2, 0.25, 0.3],
-    'max_depth': [4, 5, 6, 7, 8, 9, 10],
+    'eta': [0.05, 0.10, 0.15, 0.2],
+    'max_depth': [4, 6, 8, 10],
     'subsample': [0.5],
     'colsample_bytree': [0.5],
 }
