@@ -71,10 +71,7 @@ def make_window(start, end, holiday_list):
     temp = holiday_list[len(holiday_list):].append(temp)
     return temp.unique()
 
-holiday_10 = make_window(0, -10, us_holidays)
-holiday_20 = make_window(-10, -20, us_holidays)
-holiday_30 = make_window(-20, -30, us_holidays)
-holiday_40 = make_window(-30, -40, us_holidays)
+holiday_30 = make_window(0, -30, us_holidays)
 
 #date_account_created
 dac = np.vstack(df_all.date_account_created.astype(str).apply(lambda x: list(map(int, x.split('-')))).values)
@@ -82,10 +79,7 @@ df_all['dac_year'] = dac[:,0]
 df_all['dac_month'] = dac[:,1]
 df_all['dac_day'] = dac[:,2]
 df_all['date_account_created'] = pd.to_datetime(df_all['date_account_created'])
-df_all['dac_holiday_10'] = df_all.date_account_created.isin(holiday_10)
-df_all['dac_holiday_20'] = df_all.date_account_created.isin(holiday_20)
 df_all['dac_holiday_30'] = df_all.date_account_created.isin(holiday_30)
-df_all['dac_holiday_40'] = df_all.date_account_created.isin(holiday_40)
 dac_day_of_wk = []
 for date in df_all.date_account_created:
     dac_day_of_wk.append(date.weekday())
@@ -98,10 +92,7 @@ df_all['tfa_year'] = tfa[:,0]
 df_all['tfa_month'] = tfa[:,1]
 df_all['tfa_day'] = tfa[:,2]
 df_all['date_first_active'] = pd.to_datetime((df_all.timestamp_first_active // 1000000), format='%Y%m%d')
-df_all['tfa_holiday_10'] = df_all.date_first_active.isin(holiday_10)
-df_all['tfa_holiday_20'] = df_all.date_first_active.isin(holiday_20)
 df_all['tfa_holiday_30'] = df_all.date_first_active.isin(holiday_30)
-df_all['tfa_holiday_40'] = df_all.date_first_active.isin(holiday_40)
 tfa_day_of_wk = []
 for date in df_all.date_first_active:
     tfa_day_of_wk.append(date.weekday())
