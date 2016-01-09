@@ -19,7 +19,7 @@ train_test_cutoff = df_train.shape[0]
 df_all = pd.concat((df_train, df_test), axis=0, ignore_index=True)
 
 ##### Aggregating sessions data (based on Abeer Jha post) #####
-#only keeping sessions data with user ids found in train & test data
+# only keeping sessions data with user ids found in train & test data
 id_all = df_all['id']
 sessions_rel = sessions[sessions.user_id.isin(id_all)]
 
@@ -28,57 +28,83 @@ grp_by_sec_elapsed = sessions_rel.groupby(['user_id'])['secs_elapsed'].sum().res
 grp_by_sec_elapsed.columns = ['user_id', 'secs_elapsed']
 
 # aggregating by action and counting action_details
-action = pd.pivot_table(sessions_rel, index = ['user_id'],
+ct_action_detailXaction = pd.pivot_table(sessions_rel, index = ['user_id'],
                         columns = ['action'],
                         values = 'action_detail',
-                        aggfunc=len,fill_value=0).reset_index()
-
+                        aggfunc=len, fill_value=0).reset_index()
+ct_action_detailXaction.rename(
+    columns = lambda x: x if (x == 'user_id') else x + "_action_detail_ct", 
+    inplace = True
+)                     
 # aggregating by action_details and counting actions
-action_detail = pd.pivot_table(sessions_rel, index = ['user_id'],
+ct_actionXaction_detail = pd.pivot_table(sessions_rel, index = ['user_id'],
                         columns = ['action_detail'],
                         values = 'action',
-                        aggfunc=len,fill_value=0).reset_index()
-                        
+                        aggfunc=len, fill_value=0).reset_index()
+ct_actionXaction_detail.rename(
+    columns = lambda x: x if (x == 'user_id') else x + "_action_ct", 
+    inplace = True
+)                  
 # aggregating by action_type and counting actions                        
-action_type = pd.pivot_table(sessions_rel, index = ['user_id'],
+ct_actionXaction_type = pd.pivot_table(sessions_rel, index = ['user_id'],
                              columns = ['action_type'],
                              values = 'action',
-                             aggfunc=len,fill_value=0).reset_index()
-                             
+                             aggfunc=len, fill_value=0).reset_index()
+ct_actionXaction_type.rename(
+    columns = lambda x: x if (x == 'user_id') else x + "_action_ct", 
+    inplace = True
+)                          
 # aggregating by device_type and counting actions                             
-device_type = pd.pivot_table(sessions_rel, index = ['user_id'],
+ct_actionXdevice_type = pd.pivot_table(sessions_rel, index = ['user_id'],
                              columns = ['device_type'],
                              values = 'action',
-                             aggfunc=len,fill_value=0).reset_index()
-                             
+                             aggfunc=len, fill_value=0).reset_index()
+ct_actionXdevice_type.rename(
+    columns = lambda x: x if (x == 'user_id') else x + "_action_ct", 
+    inplace = True
+)                                                          
 # aggregating total time elapsed by action_detail
-action_time = pd.pivot_table(sessions_rel, index = ['user_id'],
+sum_secsXaction_detail = pd.pivot_table(sessions_rel, index = ['user_id'],
                         columns = ['action_detail'],
                         values = 'secs_elapsed',
-                        aggfunc=sum,fill_value=0).reset_index()                            
-                             
+                        aggfunc=sum, fill_value=0).reset_index()
+sum_secsXaction_detail.rename(
+columns = lambda x: x if (x == 'user_id') else x + "_secs", 
+inplace = True
+)
+# aggregating total time elapsed by device_type
+sum_secsXdevice_type = pd.pivot_table(sessions_rel, index = ['user_id'],
+                        columns = ['action_detail'],
+                        values = 'secs_elapsed',
+                        aggfunc=sum, fill_value=0).reset_index()
+sum_secsXdevice_type.rename(
+columns = lambda x: x if (x == 'user_id') else x + "_secs", 
+inplace = True
+)                               
 # adding aggregated session features to dataframe                             
-sessions_data = pd.merge(action_type, device_type, 
+sessions_data = pd.merge(ct_actionXaction_type, ct_actionXdevice_type, 
                          on='user_id', how='inner')
-sessions_data = pd.merge(sessions_data, action, 
+sessions_data = pd.merge(sessions_data, ct_action_detailXaction, 
                          on='user_id',how='inner')
-sessions_data = pd.merge(sessions_data, action_detail, 
+sessions_data = pd.merge(sessions_data, ct_actionXaction_detail, 
                          on='user_id',how='inner')
-sessions_data = pd.merge(sessions_data, action_time, 
-                         on='user_id',how='inner')                         
+sessions_data = pd.merge(sessions_data, sum_secsXaction_detail, 
+                         on='user_id',how='inner')
+sessions_data = pd.merge(sessions_data, sum_secsXdevice_type, 
+                         on='user_id',how='inner')                             
 sessions_data = pd.merge(sessions_data, grp_by_sec_elapsed,
                          on='user_id', how='inner')
 df_all = pd.merge(df_all, sessions_data, left_on='id', 
                   right_on='user_id', how='left')
 
-#Removing id and date_first_booking
+# Removing id and date_first_booking
 df_all = df_all.drop(['id', 'user_id', 'date_first_booking'], axis=1)
-#Filling all nan with -1 
-#tried imputing age with a rf, but did not improve results
+# Filling all nan with -1 
+# tried imputing age with a rf, but did not improve results
 df_all = df_all.fillna(-1)
 
 ##### Feature engineering #####
-# creating a list of 10d windows before 5 major US holidays
+# creating a 30d window before 5 major US holidays
 holidays_tuples = holidays.US(years=[2010,2011,2012,2013,2014])
 popular_holidays = ['Thanksgiving', 'Christmas Day', 'Independence Day', 
                     'Labor Day', 'Memorial Day']
@@ -138,7 +164,7 @@ av = df_all.age.values
 df_all['age'] = np.where(np.logical_and(av>1919, av<1995), 2015-av, av)
 df_all['age'] = np.where(np.logical_or(av<14, av>100), -1, av)
 
-#One-hot-encoding features
+# One-hot-encoding features
 ohe_feats = ['gender', 'signup_method', 'signup_flow', 'language', 
              'affiliate_channel', 'affiliate_provider', 
              'first_affiliate_tracked', 'signup_app', 
@@ -148,7 +174,7 @@ for f in ohe_feats:
     df_all = df_all.drop([f], axis=1)
     df_all = pd.concat((df_all, df_all_dummy), axis=1)
 
-#using feature selection done during CV
+# using feature selection done during CV
 feat_keep = pd.read_csv('features.csv')
 df_all = df_all[feat_keep.feature.values]
 
@@ -166,7 +192,8 @@ opt_params = {'eta': 0.2,
               'colsample_bytree': 0.5, 
               'objective': 'multi:softprob', 
               'num_class': 12,
-              'eval_metric':'ndcg'}
+              'eval_metric':'ndcg',
+              'seed':1234}
 label2num = {label: i for i, label in enumerate(sorted(set(y)))}
 dtrain = xgb.DMatrix(X, label=[label2num[label] for label in y])
 bst = xgb.train(params=opt_params, dtrain=dtrain, num_boost_round=45)

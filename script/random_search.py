@@ -25,7 +25,7 @@ train_test_cutoff = df_train.shape[0]
 df_all = pd.concat((df_train, df_test), axis=0, ignore_index=True)
 
 ##### Aggregating sessions data (based on Abeer Jha post) #####
-#only keeping sessions data with user ids found in train & test data
+# only keeping sessions data with user ids found in train & test data
 id_all = df_all['id']
 sessions_rel = sessions[sessions.user_id.isin(id_all)]
 
@@ -61,10 +61,10 @@ sessions_data = pd.merge(sessions_data, grp_by_sec_elapsed,
 df_all = pd.merge(df_all, sessions_data, left_on='id', 
                   right_on='user_id', how='left')
 
-#Removing id and date_first_booking
+# Removing id and date_first_booking
 df_all = df_all.drop(['id', 'user_id', 'date_first_booking'], axis=1)
-#Filling all nan with -1 
-#tried imputing age with a rf, but did not improve results
+# Filling all nan with -1 
+# tried imputing age with a rf, but did not improve results
 df_all = df_all.fillna(-1)
 
 ##### Feature engineering #####
@@ -128,7 +128,7 @@ av = df_all.age.values
 df_all['age'] = np.where(np.logical_and(av>1919, av<1995), 2015-av, av)
 df_all['age'] = np.where(np.logical_or(av<14, av>100), -1, av)
 
-#One-hot-encoding features
+# One-hot-encoding features
 ohe_feats = ['gender', 'signup_method', 'signup_flow', 'language', 
              'affiliate_channel', 'affiliate_provider', 
              'first_affiliate_tracked', 'signup_app', 
@@ -138,95 +138,26 @@ for f in ohe_feats:
     df_all = df_all.drop([f], axis=1)
     df_all = pd.concat((df_all, df_all_dummy), axis=1)
 
-'''    
+   
 #using feature selection done during CV
 feat_keep = pd.read_csv('features.csv')
 df_all = df_all[feat_keep.feature.values]
-'''
 
-#Splitting train and test
+
+# Splitting train and test
 vals = df_all.values
 X = vals[:train_test_cutoff]
 le = LabelEncoder()
 y = le.fit_transform(labels)   
 X_test = vals[train_test_cutoff:]
-'''
-#Grid search hyperparameter tuning
-class XGBoostClassifier():
-    def __init__(self, num_boost_round=10, **params):
-        self.clf = None
-        self.num_boost_round = num_boost_round
-        self.params = params
-        self.params.update({'objective': 'multi:softprob'})
- 
-    def fit(self, X, y, num_boost_round=None):
-        num_boost_round = num_boost_round or self.num_boost_round
-        self.label2num = {label: i for i, label in enumerate(sorted(set(y)))}
-        dtrain = xgb.DMatrix(X, label=[self.label2num[label] for label in y])
-        self.clf = xgb.train(params=self.params, dtrain=dtrain, num_boost_round=num_boost_round)
- 
-    def predict(self, X):
-        num2label = {i: label for label, i in self.label2num.items()}
-        Y = self.predict_proba(X)
-        y = np.argmax(Y, axis=1)
-        return np.array([num2label[i] for i in y])
- 
-    def predict_proba(self, X):
-        dtest = xgb.DMatrix(X)
-        return self.clf.predict(dtest)
- 
-    def score(self, X, y):
-        Y = self.predict_proba(X)
-        return 1 / logloss(y, Y)
- 
-    def get_params(self, deep=True):
-        return self.params
- 
-    def set_params(self, **params):
-        if 'num_boost_round' in params:
-            self.num_boost_round = params.pop('num_boost_round')
-        if 'objective' in params:
-            del params['objective']
-        self.params.update(params)
-        return self  
-    
-def logloss(y_true, Y_pred):
-    label2num = dict((name, i) for i, name in enumerate(sorted(set(y_true))))
-    return -1 * sum(math.log(y[label2num[label]]) if y[label2num[label]] > 0 else -np.inf for y, label in zip(Y_pred, y_true)) / len(Y_pred)
 
-def dcg_at_k(r, k):
-    r = np.asfarray(r)[:k]
-    if r.size:
-        return np.sum(r / np.log2(np.arange(2, r.size + 2)))
-    return 0.
-
-def ndcg_at_k(r, k=5):
-    dcg_max = dcg_at_k(sorted(r, reverse=True), k)
-    if not dcg_max:
-        return 0.
-    return dcg_at_k(r, k) / dcg_max
-
-clf = XGBoostClassifier(
-    eval_metric = 'ndcg',
-    num_class = 12,
-    silent = 1,
-    )
-    
-parameters = {
-    'num_boost_round': [30, 35, 40, 45, 50],
-    'eta': [0.05, 0.10, 0.15, 0.2],
-    'max_depth': [4, 6, 8, 10],
-    'subsample': [0.5],
-    'colsample_bytree': [0.5],
-    'min_child_weight': [1, 60]
-}
-'''
+# Grid search hyperparameter tuning
 clf = xgb.sklearn.XGBClassifier()
 
 parameters = {
         'max_depth':[6], 
-        'learning_rate':[0.2],
-        'n_estimators':[45],
+        'learning_rate':[0.1, 0.2, 0.3],
+        'n_estimators':[30, 45, 60],
         'objective':'multi:softprob',
         'nthread':[-1],
         'gamma':[0],
@@ -234,22 +165,24 @@ parameters = {
         'max_delta_step':[0],
         'subsample':[0.5],
         'colsample_bytree':[0.5],
-        'base_score':[0.5], 
+        'base_score':[0.08333333, 0.5], 
         'seed':[0],     
 }
 
 fit_params = {'eval_metric':'ndcg'}
 
-rand = RandomizedSearchCV(clf, parameters, cv=3, n_iter=10, 
+rand = RandomizedSearchCV(clf, parameters, cv=3, n_iter=15, 
                           fit_params=fit_params, verbose=1)
 rand.fit(X,y)
-print rand.grid_scores_
+scores =  rand.grid_scores_
 print rand.best_score_
 print rand.best_params_
 
-###################################################
-param = {'eta': 0.15, 'max_depth': 6,'subsample': 0.5, 'colsample_bytree': 0.5, 'objective': 'multi:softprob', 'num_class': 12}
+'''
+param = {'eta': 0.15, 'max_depth': 6,'subsample': 0.5, 'colsample_bytree': 0.5, 
+         'objective': 'multi:softprob', 'num_class': 12}
 num_round = 45
 label2num = {label: i for i, label in enumerate(sorted(set(y)))}
 dtrain = xgb.DMatrix(X, label=[label2num[label] for label in y])
 xgb.cv(param, dtrain, num_round, nfold=3, metrics={'ndcg'}, seed = 0)
+'''
