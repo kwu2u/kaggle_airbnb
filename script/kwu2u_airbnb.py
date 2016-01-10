@@ -1,6 +1,6 @@
 # This script is based on Sandro's python script
-# note: tree ensemble invariant to scaling so no normalization necessary,
-# one hot encoding categorical features so no need to separate from continuous
+# note: tree ensembles are invariant to scaling so no normalization necessary,
+# one hot encoding categorical features
 
 import numpy as np
 import pandas as pd
@@ -38,7 +38,7 @@ ct_action_detailXaction.rename(
     columns = lambda x: x if (x == 'user_id') else x + "_action_detail_ct", 
     inplace = True
 )
-'''                     
+''' this is mostly captured by summing secs_elapsed by action_detail                   
 # aggregating by action_details and counting actions
 ct_actionXaction_detail = pd.pivot_table(sessions_rel, index = ['user_id'],
                         columns = ['action_detail'],
@@ -165,7 +165,7 @@ for f in ohe_feats:
     df_all = df_all.drop([f], axis=1)
     df_all = pd.concat((df_all, df_all_dummy), axis=1)
 
-# using feature selection done during CV
+# performing feature selection based on xgb.get_fscore
 feat_keep = pd.read_csv('features.csv')
 df_all = df_all[feat_keep.feature.values]
 
@@ -187,7 +187,7 @@ opt_params = {'eta': 0.05,
               'seed':1234}
 label2num = {label: i for i, label in enumerate(sorted(set(y)))}
 dtrain = xgb.DMatrix(X, label=[label2num[label] for label in y])
-bst = xgb.train(params=opt_params, dtrain=dtrain, num_boost_round=100)
+bst = xgb.train(params=opt_params, dtrain=dtrain, num_boost_round=200)
 
 y_pred = bst.predict(xgb.DMatrix(X_test), 
                      ntree_limit=bst.best_iteration
