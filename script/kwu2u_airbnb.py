@@ -154,15 +154,6 @@ df_all = df_all.drop(['timestamp_first_active','date_first_active'], axis=1)
 av = df_all.age.values
 df_all['age'] = np.where(np.logical_and(av>1919, av<1995), 2015-av, av)
 df_all['age'] = np.where(np.logical_or(av<14, av>100), -1, av)
-# bucketing ages (15,100) in 5 yr groups, (-1,14) captures missing/invalid values
-age_labels = ['missing','15-19','20-24','25-29','30-34','35-39','40-44','45-49',
-              '50-54','55-59','60-64','65-69','70-74','75-79','80-84','85-89',
-              '90-94','95-100']
-df_all['age_buckets'] = pd.cut(df_all.age, np.insert(np.arange(15, 101, 5), 0, -2), 
-                               labels = age_labels)
-age_dummies = pd.get_dummies(df_all.age_buckets, prefix='age')
-df_all =  df_all.drop(['age', 'age_buckets'], axis=1)
-df_all = pd.concat((df_all, age_dummies), axis=1)
 
 # One-hot-encoding features
 ohe_feats = ['gender', 'signup_method', 'signup_flow', 'language', 
