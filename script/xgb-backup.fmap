@@ -1,0 +1,161 @@
+0	age	q
+1	dac_year	q
+2	dac_month	q
+3	dac_day	q
+4	tfa_year	q
+5	tfa_month	q
+6	tfa_day	q
+7	gender_-unknown-	q
+8	gender_FEMALE	q
+9	gender_MALE	q
+10	gender_OTHER	q
+11	signup_method_basic	q
+12	signup_method_facebook	q
+13	signup_method_google	q
+14	signup_method_weibo	q
+15	signup_flow_0	q
+16	signup_flow_1	q
+17	signup_flow_2	q
+18	signup_flow_3	q
+19	signup_flow_4	q
+20	signup_flow_5	q
+21	signup_flow_6	q
+22	signup_flow_8	q
+23	signup_flow_10	q
+24	signup_flow_12	q
+25	signup_flow_14	q
+26	signup_flow_15	q
+27	signup_flow_16	q
+28	signup_flow_20	q
+29	signup_flow_21	q
+30	signup_flow_23	q
+31	signup_flow_24	q
+32	signup_flow_25	q
+33	language_-unknown-	q
+34	language_ca	q
+35	language_cs	q
+36	language_da	q
+37	language_de	q
+38	language_el	q
+39	language_en	q
+40	language_es	q
+41	language_fi	q
+42	language_fr	q
+43	language_hr	q
+44	language_hu	q
+45	language_id	q
+46	language_is	q
+47	language_it	q
+48	language_ja	q
+49	language_ko	q
+50	language_nl	q
+51	language_no	q
+52	language_pl	q
+53	language_pt	q
+54	language_ru	q
+55	language_sv	q
+56	language_th	q
+57	language_tr	q
+58	language_zh	q
+59	affiliate_channel_api	q
+60	affiliate_channel_content	q
+61	affiliate_channel_direct	q
+62	affiliate_channel_other	q
+63	affiliate_channel_remarketing	q
+64	affiliate_channel_sem-brand	q
+65	affiliate_channel_sem-non-brand	q
+66	affiliate_channel_seo	q
+67	affiliate_provider_baidu	q
+68	affiliate_provider_bing	q
+69	affiliate_provider_craigslist	q
+70	affiliate_provider_daum	q
+71	affiliate_provider_direct	q
+72	affiliate_provider_email-marketing	q
+73	affiliate_provider_facebook	q
+74	affiliate_provider_facebook-open-graph	q
+75	affiliate_provider_google	q
+76	affiliate_provider_gsp	q
+77	affiliate_provider_meetup	q
+78	affiliate_provider_naver	q
+79	affiliate_provider_other	q
+80	affiliate_provider_padmapper	q
+81	affiliate_provider_vast	q
+82	affiliate_provider_wayn	q
+83	affiliate_provider_yahoo	q
+84	affiliate_provider_yandex	q
+85	first_affiliate_tracked_-1	q
+86	first_affiliate_tracked_linked	q
+87	first_affiliate_tracked_local ops	q
+88	first_affiliate_tracked_marketing	q
+89	first_affiliate_tracked_omg	q
+90	first_affiliate_tracked_product	q
+91	first_affiliate_tracked_tracked-other	q
+92	first_affiliate_tracked_untracked	q
+93	signup_app_Android	q
+94	signup_app_Moweb	q
+95	signup_app_Web	q
+96	signup_app_iOS	q
+97	first_device_type_Android Phone	q
+98	first_device_type_Android Tablet	q
+99	first_device_type_Desktop (Other)	q
+100	first_device_type_Mac Desktop	q
+101	first_device_type_Other/Unknown	q
+102	first_device_type_SmartPhone (Other)	q
+103	first_device_type_Windows Desktop	q
+104	first_device_type_iPad	q
+105	first_device_type_iPhone	q
+106	first_browser_-unknown-	q
+107	first_browser_AOL Explorer	q
+108	first_browser_Android Browser	q
+109	first_browser_Apple Mail	q
+110	first_browser_Arora	q
+111	first_browser_Avant Browser	q
+112	first_browser_BlackBerry Browser	q
+113	first_browser_Camino	q
+114	first_browser_Chrome	q
+115	first_browser_Chrome Mobile	q
+116	first_browser_Chromium	q
+117	first_browser_CometBird	q
+118	first_browser_Comodo Dragon	q
+119	first_browser_Conkeror	q
+120	first_browser_CoolNovo	q
+121	first_browser_Crazy Browser	q
+122	first_browser_Epic	q
+123	first_browser_Firefox	q
+124	first_browser_Flock	q
+125	first_browser_Google Earth	q
+126	first_browser_Googlebot	q
+127	first_browser_IBrowse	q
+128	first_browser_IE	q
+129	first_browser_IE Mobile	q
+130	first_browser_IceDragon	q
+131	first_browser_IceWeasel	q
+132	first_browser_Iron	q
+133	first_browser_Kindle Browser	q
+134	first_browser_Maxthon	q
+135	first_browser_Mobile Firefox	q
+136	first_browser_Mobile Safari	q
+137	first_browser_Mozilla	q
+138	first_browser_NetNewsWire	q
+139	first_browser_Nintendo Browser	q
+140	first_browser_OmniWeb	q
+141	first_browser_Opera	q
+142	first_browser_Opera Mini	q
+143	first_browser_Opera Mobile	q
+144	first_browser_Outlook 2007	q
+145	first_browser_PS Vita browser	q
+146	first_browser_Pale Moon	q
+147	first_browser_Palm Pre web browser	q
+148	first_browser_RockMelt	q
+149	first_browser_Safari	q
+150	first_browser_SeaMonkey	q
+151	first_browser_Silk	q
+152	first_browser_SiteKiosk	q
+153	first_browser_SlimBrowser	q
+154	first_browser_Sogou Explorer	q
+155	first_browser_Stainless	q
+156	first_browser_TenFourFox	q
+157	first_browser_TheWorld Browser	q
+158	first_browser_UC Browser	q
+159	first_browser_Yandex.Browser	q
+160	first_browser_wOSBrowser	q

@@ -71,6 +71,7 @@ cv = xgb.cv(xgb_params, dtrain, num_boost_round=200, nfold=3, seed=0,
 
 '''
 cv-test-ndcg5:0.832291666667
+cv-test-ndcg5:0.832114666667 w/ binned age
 xgb_params = {'eta': 0.05, 
               'max_depth': 6,
               'subsample': 0.7, 
