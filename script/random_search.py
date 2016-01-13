@@ -1,11 +1,15 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Dec 28 15:26:12 2015
-
-@author: kwu
-"""
+from Munger import clean_data
+import pandas as pd
 import numpy as np
 import xgboost as xgb
+
+M = clean_data()
+
+feat_keep = pd.read_csv('features.csv')
+M.select_features(feat_keep)
+
+X, X_test = M.data_split()
+y = M.label_transformer()
 
 xgb_params = {'eta': 0.05, 
               'max_depth': 6,
@@ -34,7 +38,7 @@ cv = xgb.cv(xgb_params, dtrain, num_boost_round=200, nfold=3, seed=0,
              feval = customized_eval, maximize = True, show_progress = True)
 
 '''
-cv-test-ndcg5:0.832291666667
+cv-test-ndcg5:0.832291666667 current best model
 cv-test-ndcg5:0.832114666667 w/ binned age
 xgb_params = {'eta': 0.05, 
               'max_depth': 6,

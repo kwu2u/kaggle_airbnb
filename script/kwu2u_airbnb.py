@@ -166,7 +166,7 @@ for f in ohe_feats:
     df_all = pd.concat((df_all, df_all_dummy), axis=1)
 
 # performing feature selection based on xgb.get_fscore
-feat_keep = pd.read_csv('features.csv')
+feat_keep = pd.read_csv('features-kwu2u.csv')
 df_all = df_all[feat_keep.feature.values]
 
 # Splitting train and test
