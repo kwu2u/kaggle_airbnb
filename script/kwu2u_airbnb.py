@@ -47,8 +47,7 @@ ct_actionXaction_detail = pd.pivot_table(sessions_rel, index = ['user_id'],
 ct_actionXaction_detail.rename(
     columns = lambda x: x if (x == 'user_id') else x + "_action_ct", 
     inplace = True
-)
-'''                  
+)'''                  
 # aggregating by action_type and counting actions                        
 ct_actionXaction_type = pd.pivot_table(sessions_rel, index = ['user_id'],
                              columns = ['action_type'],
@@ -81,10 +80,8 @@ sessions_data = pd.merge(ct_actionXaction_type, ct_actionXdevice_type,
                          on='user_id', how='inner')
 sessions_data = pd.merge(sessions_data, ct_action_detailXaction, 
                          on='user_id',how='inner')
-'''
-sessions_data = pd.merge(sessions_data, ct_actionXaction_detail, 
-                         on='user_id',how='inner')
-'''
+'''sessions_data = pd.merge(sessions_data, ct_actionXaction_detail, 
+                         on='user_id',how='inner')'''
 sessions_data = pd.merge(sessions_data, sum_secsXaction_detail, 
                          on='user_id',how='inner')                             
 sessions_data = pd.merge(sessions_data, grp_by_sec_elapsed,
@@ -96,6 +93,7 @@ df_all = pd.merge(df_all, sessions_data, left_on='id',
 df_all = df_all.drop(['id', 'user_id', 'date_first_booking'], axis=1)
 # Filling all nan with -1 
 # tried imputing age with a rf, but did not improve results
+df_all.age = df_all.age.fillna(max(df_all.age))
 df_all = df_all.fillna(-1)
 
 ##### Feature engineering #####
@@ -154,6 +152,7 @@ df_all = df_all.drop(['timestamp_first_active','date_first_active'], axis=1)
 av = df_all.age.values
 df_all['age'] = np.where(np.logical_and(av>1919, av<1995), 2015-av, av)
 df_all['age'] = np.where(np.logical_or(av<14, av>100), -1, av)
+'''df_all['age_sq'] = df_all['age']**2'''
 
 # One-hot-encoding features
 ohe_feats = ['gender', 'signup_method', 'signup_flow', 'language', 

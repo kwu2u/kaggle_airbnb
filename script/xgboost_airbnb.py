@@ -5,7 +5,7 @@ import xgboost as xgb
 
 M = clean_data()
 
-feat_keep = pd.read_csv('features.csv')
+feat_keep = pd.read_csv('features-kwu2u.csv')
 M.select_features(feat_keep)
 
 X, X_test = M.data_split()
@@ -17,7 +17,7 @@ opt_params = {'eta': 0.05,
               'colsample_bytree': 0.7, 
               'objective': 'multi:softprob', 
               'num_class': 12,
-              'eval_metric':'ndcg',
+              'eval_metric':'ndcg@5',
               'seed':1234}
               
 label2num = {label: i for i, label in enumerate(sorted(set(y)))}

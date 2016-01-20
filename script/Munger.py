@@ -54,8 +54,7 @@ class Munger():
         ct_actionXaction_detail.rename(
             columns = lambda x: x if (x == 'user_id') else x + "_action_ct", 
             inplace = True
-        )
-        '''                  
+        )'''                  
         # aggregating by action_type and counting actions                        
         ct_actionXaction_type = pd.pivot_table(sessions_rel, index = ['user_id'],
                                      columns = ['action_type'],
@@ -88,10 +87,8 @@ class Munger():
                                  on='user_id', how='inner')
         sessions_data = pd.merge(sessions_data, ct_action_detailXaction, 
                                  on='user_id',how='inner')
-        '''
-        sessions_data = pd.merge(sessions_data, ct_actionXaction_detail, 
-                                 on='user_id',how='inner')
-        '''
+        '''sessions_data = pd.merge(sessions_data, ct_actionXaction_detail, 
+                                 on='user_id',how='inner')'''
         sessions_data = pd.merge(sessions_data, sum_secsXaction_detail, 
                                  on='user_id',how='inner')                             
         sessions_data = pd.merge(sessions_data, grp_by_sec_elapsed,
