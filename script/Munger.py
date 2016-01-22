@@ -93,6 +93,9 @@ class Munger():
                                  on='user_id',how='inner')                             
         sessions_data = pd.merge(sessions_data, grp_by_sec_elapsed,
                                  on='user_id', how='inner')
+        # storing sessions columns for standardization later
+        self.session_cols = sessions_data.drop('user_id', axis=1).columns
+        
         self.df_all = pd.merge(self.df_all, sessions_data, left_on='id', 
                           right_on='user_id', how='left')
         
@@ -100,6 +103,7 @@ class Munger():
         self.df_all = self.df_all.drop(['id', 'user_id', 'date_first_booking'], axis=1)
         # Filling all nan with -1 
         # tried imputing age with a rf, but did not improve results
+        self.df_all.age = self.df_all.age.fillna(max(self.df_all.age))
         self.df_all = self.df_all.fillna(-1)
         
     def engineer_features(self):
@@ -165,7 +169,7 @@ class Munger():
             df_all_dummy = pd.get_dummies(self.df_all[f], prefix=f)
             self.df_all = self.df_all.drop([f], axis=1)
             self.df_all = pd.concat((self.df_all, df_all_dummy), axis=1)
-            
+        
     def label_transformer(self):
         return self.le.fit_transform(self.labels)
         

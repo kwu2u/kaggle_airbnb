@@ -99,7 +99,8 @@ df_all = df_all.fillna(-1)
 ##### Feature engineering #####
 # creating a 30d window before 5 major US holidays
 holidays_tuples = holidays.US(years=[2010,2011,2012,2013,2014])
-popular_holidays = ['Independence Day', 'Labor Day', 'Memorial Day']
+popular_holidays = ['Thanksgiving', 'Christmas Day', 'Independence Day', 
+                    'Labor Day', 'Memorial Day']
 holidays_tuples = {k:v for (k,v) in holidays_tuples.items() if v in popular_holidays}
 us_holidays = pd.to_datetime([i[0] for i in np.array(holidays_tuples.items())])
 
@@ -164,41 +165,25 @@ for f in ohe_feats:
     df_all = pd.concat((df_all, df_all_dummy), axis=1)
 
 # performing feature selection based on xgb.get_fscore
-feat_keep = pd.read_csv('features.csv')
+feat_keep = pd.read_csv('features-kwu2u.csv')
 df_all = df_all[feat_keep.feature.values]
 
 # Splitting train and test
 vals = df_all.values
 X = vals[:train_test_cutoff]
-le = LabelEncoder()
-y = le.fit_transform(labels)   
+#le = LabelEncoder()
+#y = le.fit_transform(labels)
+y = np.where(labels == 'NDF', 0, 1)   
 X_test = vals[train_test_cutoff:]
 
 # Classifier
-opt_params = {'eta': 0.05, 
-              'max_depth': 6,
-              'subsample': 0.7, 
-              'colsample_bytree': 0.7, 
-              'objective': 'multi:softprob', 
-              'num_class': 12,
-              'eval_metric':'ndcg',
+xgb_params = {'eta': 0.2, 
+              'max_depth': 5,
+              'subsample': 0.6, 
+              'colsample_bytree': 1, 
+              'objective': 'reg:logistic',
+              'eval_metric':'error',
               'seed':1234}
-label2num = {label: i for i, label in enumerate(sorted(set(y)))}
-dtrain = xgb.DMatrix(X, label=[label2num[label] for label in y])
-bst = xgb.train(params=opt_params, dtrain=dtrain, num_boost_round=200)
 
-y_pred = bst.predict(xgb.DMatrix(X_test), 
-                     ntree_limit=bst.best_iteration
-                ).reshape(df_test.shape[0],12) 
-
-# Taking the 5 classes with highest probabilities
-ids = []  #list of ids
-cts = []  #list of countries
-for i in range(len(id_test)):
-    idx = id_test[i]
-    ids += [idx] * 5
-    cts += le.inverse_transform(np.argsort(y_pred[i])[::-1])[:5].tolist()
-
-# Generate submission
-sub = pd.DataFrame(np.column_stack((ids, cts)), columns=['id', 'country'])
-sub.to_csv('sub.csv',index=False)
+cv = xgb.cv(xgb_params, xgb.DMatrix(X, label=y), num_boost_round=100, nfold=3, seed=0, 
+            show_progress = True)
