@@ -1,0 +1,2 @@
+# Kaggle: Airbnb New User Booking
+This repo contains the code for my submissions to the competition. My best performing submission is generated from the [kwu2u_airbnb.py](https://github.com/kevinwu06/kaggle_airbnb/blob/master/script/kwu2u_airbnb.py) file in the script folder. Exploratory analysis can be found in the [iPython notebook](https://github.com/kevinwu06/kaggle_airbnb/blob/master/script/Airbnb_Exploratory.ipynb).
