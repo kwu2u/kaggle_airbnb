@@ -44,17 +44,16 @@ class Munger():
         ct_action_detailXaction.rename(
             columns = lambda x: x if (x == 'user_id') else x + "_action_detail_ct", 
             inplace = True
-        )
-        ''' this is mostly captured by summing secs_elapsed by action_detail                   
-        # aggregating by action_details and counting actions
-        ct_actionXaction_detail = pd.pivot_table(sessions_rel, index = ['user_id'],
+        )          
+        '''# aggregating by action_details and counting action_type
+        ct_action_typeXaction_detail = pd.pivot_table(sessions_rel, index = ['user_id'],
                                 columns = ['action_detail'],
-                                values = 'action',
+                                values = 'action_type',
                                 aggfunc=len, fill_value=0).reset_index()
-        ct_actionXaction_detail.rename(
-            columns = lambda x: x if (x == 'user_id') else x + "_action_ct", 
+        ct_action_typeXaction_detail.rename(
+            columns = lambda x: x if (x == 'user_id') else x + "_actiontype_ct", 
             inplace = True
-        )'''                  
+        )'''            
         # aggregating by action_type and counting actions                        
         ct_actionXaction_type = pd.pivot_table(sessions_rel, index = ['user_id'],
                                      columns = ['action_type'],
@@ -70,7 +69,7 @@ class Munger():
                                      values = 'action',
                                      aggfunc=len, fill_value=0).reset_index()
         ct_actionXdevice_type.rename(
-            columns = lambda x: x if (x == 'user_id') else x + "_action_ct", 
+            columns = lambda x: x if (x == 'user_id') else x + "_device_action_ct", 
             inplace = True
         )                                            
         # aggregating total time elapsed by action_detail
@@ -81,20 +80,33 @@ class Munger():
         sum_secsXaction_detail.rename(
         columns = lambda x: x if (x == 'user_id') else x + "_secs", 
         inplace = True
-        )                             
+        )
+        '''# aggregating total time elapsed by device_type
+        sum_secsXdevice_type = pd.pivot_table(sessions_rel, index = ['user_id'],
+                                columns = ['device_type'],
+                                values = 'secs_elapsed',
+                                aggfunc=sum, fill_value=0).reset_index()
+        sum_secsXdevice_type.rename(
+        columns = lambda x: x if (x == 'user_id') else x + "_secs", 
+        inplace = True
+        )'''  
         # adding aggregated session features to dataframe                             
         sessions_data = pd.merge(ct_actionXaction_type, ct_actionXdevice_type, 
                                  on='user_id', how='inner')
         sessions_data = pd.merge(sessions_data, ct_action_detailXaction, 
                                  on='user_id',how='inner')
-        '''sessions_data = pd.merge(sessions_data, ct_actionXaction_detail, 
+        '''sessions_data = pd.merge(sessions_data, ct_action_typeXaction_detail, 
                                  on='user_id',how='inner')'''
         sessions_data = pd.merge(sessions_data, sum_secsXaction_detail, 
-                                 on='user_id',how='inner')                             
+                                 on='user_id',how='inner')  
+        '''sessions_data = pd.merge(sessions_data, sum_secsXdevice_type, 
+                                 on='user_id',how='inner')'''
         sessions_data = pd.merge(sessions_data, grp_by_sec_elapsed,
-                                 on='user_id', how='inner')
-        # storing sessions columns for standardization later
-        self.session_cols = sessions_data.drop('user_id', axis=1).columns
+                                 on='user_id', how='inner')            
+        # transforming all sessions features except user_id
+        self.sessions_cols = sessions_data.iloc[:,1:].columns
+        '''for col in sessions_cols:
+            sessions_data[col+'_sq'] = sessions_data[col]**2'''
         
         self.df_all = pd.merge(self.df_all, sessions_data, left_on='id', 
                           right_on='user_id', how='left')
@@ -177,9 +189,8 @@ class Munger():
         return self.le.inverse_transform(labels)
         
     def data_split(self):
-        vals = self.df_all.values
-        X = vals[:self.train_test_cutoff]
-        X_test = vals[self.train_test_cutoff:]
+        X = self.df_all.iloc[:self.train_test_cutoff]
+        X_test = self.df_all.iloc[self.train_test_cutoff:]
         return X, X_test
         
     def get_train_data(self):

@@ -5,7 +5,7 @@ import xgboost as xgb
 
 M = clean_data()
 
-feat_keep = pd.read_csv('features-kwu2u.csv')
+feat_keep = pd.read_csv('features.csv')
 M.select_features(feat_keep)
 
 X, X_test = M.data_split()

@@ -21,17 +21,7 @@ dtrain = xgb.DMatrix(X, label=[label2num[label] for label in y])
 bst = xgb.train(params=opt_params, dtrain=dtrain, num_boost_round=30)
 #xgb.plot_importance(bst)
 
-def create_feature_map(features):
-    outfile = open('xgb.fmap', 'w')
-    i = 0
-    for feat in features:
-        outfile.write('{0}\t{1}\tq\n'.format(i, feat))
-        i = i + 1
-
-    outfile.close()
-
-create_feature_map(list(M.df_all.columns.values))
-importance = bst.get_fscore(fmap='xgb.fmap')
+importance = bst.get_fscore()
 importance_df = pd.DataFrame(importance.items(), columns=['feature','fscore'])
 importance_df.to_csv('features.csv',index=False)
 

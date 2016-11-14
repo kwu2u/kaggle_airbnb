@@ -1,8 +1,8 @@
 from Munger import clean_data
-from xgb_sklearn_wrapper import XGBoostClassifier
+from xgboost.sklearn import XGBClassifier
 import pandas as pd
 import numpy as np
-from sklearn.multiclass import OneVsRestClassifier
+from sklearn.calibration import CalibratedClassifierCV
 
 M = clean_data()
 
@@ -12,22 +12,20 @@ M.select_features(feat_keep)
 X, X_test = M.data_split()
 y = M.label_transformer()
 
-clf = XGBoostClassifier(
-    num_class = 12,
-    silent = 1,
+clf = XGBClassifier(
+    objective = 'multi:softprob',
+    n_estimators = 200,
+    learning_rate = 0.05,
+    max_depth = 6,
+    subsample = 0.7,
+    colsample_bytree = 0.7,
+    seed = 0
     )
-    
-clf.set_params(**{'objective': 'binary:logistic',
-                  'n_estimators': 200,
-                  'learning_rate' : 0.05,
-                  'max_depth' : 6,
-                  'subsample' : 0.7,
-                  'colsample_bytree' : 0.7})
-    
-ovrClf = OneVsRestClassifier(clf)
-ovrClf.fit(X, y)
-y_pred = ovrClf.predict_proba(X_test)
 
+sig_clf = CalibratedClassifierCV(clf, method="sigmoid", cv=3)
+sig_clf.fit(X,y)
+y_pred = sig_clf.predict_proba(X_test)
+               
 # Taking the 5 classes with highest probabilities
 ids = []  #list of ids
 cts = []  #list of countries
